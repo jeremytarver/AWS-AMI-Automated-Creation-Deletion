@@ -9,8 +9,6 @@ var ec2 = new aws.EC2();
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForInstanceTagToBackup = "Backup"; // looks for string yes
 const keyForInstanceTagDurationBackup = "BackupRetentionDays"; // accepts numbers like 5 or 10 or 22 and so on.
-const keyForInstanceTagNoReboot = "BackupNoReboot"; // if true then it wont reboot. If not present or set to false then it will reboot.
-
 
 // Lambda handler
 exports.handler = function(event, context) { 
@@ -60,15 +58,14 @@ exports.handler = function(event, context) {
                         console.log("Skipping instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));
                     }else{
                         console.log("Processing instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));                        
-                        var genDate = new Date();  
-                        genDate.setDate(genDate.getDate() + backupRetentionDaysforAMI); // days that are required to be held
+                        var deleteDate = new Date();  
+                        deleteDate.setDate(deleteDate.getDate() + backupRetentionDaysforAMI); // days that are required to be held
                         var imageparams = {
                             InstanceId: instanceid,
-                            Name: name + "_" + keyForEpochMakerinAMI + genDate.getTime(),
+                            Name: name + "_" + keyForEpochMakerinAMI + deleteDate.getTime(),
+                            NoReboot: true
                         };
-                        if(noReboot == true){
-                            imageparams["NoReboot"] = true;
-                        }
+                        
                         console.log(imageparams);
                         ec2.createImage(imageparams, function(err, data) {
                             if (err) console.log(err, err.stack);
